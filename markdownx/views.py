@@ -25,7 +25,6 @@ class MarkdownifyView(View):
         markdownify = import_string(MARKDOWNX_MARKDOWNIFY_FUNCTION)
         return HttpResponse(markdownify(request.POST['content']))
 
-
 class ImageUploadView(BaseFormView):
     """
     Handling requests for uploading images.
@@ -38,17 +37,14 @@ class ImageUploadView(BaseFormView):
     def form_invalid(self, form):
         """
         Handling of invalid form events.
-
         :param form: Django form instance.
         :type form: django.forms.Form
         :return: JSON response with the HTTP-400 error message for AJAX requests
                  and the default response for HTTP requests.
         :rtype: django.http.JsonResponse, django.http.HttpResponse
         """
-        #if self.request.is_ajax():
-        #    return JsonResponse(form.errors, status=400)
-
-        return JsonResponse(form.errors, status=400)
+        if self.request.is_ajax():
+            return JsonResponse(form.errors, status=400)
 
         response = super(ImageUploadView, self).form_invalid(form)
         return response
@@ -56,17 +52,12 @@ class ImageUploadView(BaseFormView):
     def form_valid(self, form):
         """
         If the form is valid, the contents are saved.
-
         If the **POST** request is AJAX (image uploads), a JSON response will be
         produced containing the Markdown encoded image insertion tag with the URL
         using which the uploaded image may be accessed.
-
         JSON response would be as follows:
-
         .. code-block:: bash
-
             { image_code: "![](/media/image_directory/123-4e6-ga3.png)" }
-
         :param form: Django form instance.
         :type form: django.forms.Form
         :return: JSON encoded Markdown tag for AJAX requests, and an appropriate
@@ -79,12 +70,50 @@ class ImageUploadView(BaseFormView):
             image_path = form.save(commit=True)
             image_code = '![]({})'.format(image_path)
             return JsonResponse({'image_code': image_code})
-        
-        else:
-            image_path = form.save(commit=True)
-            image_code = '![]({})'.format(image_path)
-
-            return JsonResponse({"data": {"filePath": image_path[1:]}})
-            #return JsonResponse({'image_code': image_code})
 
         return response
+class ImageUploadViewEM(BaseFormView):
+    """
+    Handling requests for uploading images via EasyMDE.
+    """
+    form_class = ImageForm
+    success_url = '/'
+
+    def form_invalid(self, form):
+        """
+        Handling of invalid form events.
+
+        is_ajax() seems not to be working
+
+        :param form: Django form instance.
+        :type form: django.forms.Form
+        :return: JSON response with the HTTP-400 error message for AJAX requests
+                 and the default response for HTTP requests.
+        :rtype: django.http.JsonResponse
+        """
+
+        return JsonResponse(form.errors, status=400)
+
+    def form_valid(self, form):
+        """
+        If the form is valid, the contents are saved.
+
+        is_ajax() seems not to be working
+
+        If the **POST** request is AJAX (image uploads), a JSON response will be
+        produced containing the Markdown encoded image insertion tag with the URL
+        using which the uploaded image may be accessed.
+
+        JSON response would be as follows:
+
+        { data: {filePath: "/media/image_directory/123-4e6-ga3.png" } }
+
+        :param form: Django form instance.
+        :type form: django.forms.Form
+        :return: JSON encoded Markdown tag for AJAX requests, and an appropriate
+                 response for HTTP requests.
+        :rtype: django.http.JsonResponse
+        """
+
+        image_path = form.save(commit=True)
+        return JsonResponse({"data": {"filePath": image_path[1:]}})
