@@ -77,5 +77,12 @@ class ImageUploadView(BaseFormView):
             image_path = form.save(commit=True)
             image_code = '![]({})'.format(image_path)
             return JsonResponse({'image_code': image_code})
+        
+        else:
+            image_path = form.save(commit=True)
+            image_code = '![]({})'.format(image_path)
+
+            return JsonResponse({"data": {"filePath": image_path[1:]}})
+            #return JsonResponse({'image_code': image_code})
 
         return response
